@@ -1,7 +1,10 @@
-from flask import jsonify, Flask
-import  os
 import json
+
+import  os
 from config import config
+from os import path
+from the_objects import get_the_objects
+
 
 def hello():
     data = {'id': 5, 'name': 'this is name', 'content': 'data content'}
@@ -49,13 +52,33 @@ def init_engine():
 
 
 #Загрузка данных по объектам
+def check_object_content(object) -> bool:
+    if object is None:
+        return False
+
+    try:
+        if not "id" in object:
+            return False
+
+        if not "links" in object:
+            return False
+
+    except TypeError:
+        return False
+
+
+    return True
+
+
 def load_objects():
 
     files_list = [f for f in os.listdir(config["obj"]) if os.path.isfile(os.path.join(config["obj"], f))]
     objects = []
     for (file) in files_list:
         content = open(os.path.join(config["obj"], file))
-        objects.append(json.load(content))
+        object = json.load(content)
+        if check_object_content(object):
+            objects.append(object)
 
     return  objects
 
@@ -71,22 +94,32 @@ def save_config_data():
     current_id.write(str(config["current_id"]))
     current_id.close()
 
+    config_for_save = {}
+    config_for_save["root_path"] = config["root_path"]
+    with open("config.json", "w") as file:
+        json.dump(config_for_save, file)
+
+
+def load_config():
+    if path.exists("config.json"):
+        with open("config.json", "r") as file:
+            config = json.load(file)
+
+import  the_object
 
 if __name__ == '__main__':
-    init_engine()
+    the_object.test_the_object_module()
+    for o in get_the_objects():
+        print(o)
 
-    objs = load_objects()
+    # load_config()
+    # init_engine()
+    # objs = load_objects()
+    # print(objs)
+    # save_config_data()
 
-    #
-    # data = {'id': 5, 'name': 'this is name', 'content': 'data content'}
-    # save_obj("2", data)
-
-
-    print(objs)
-
-    # hello()
     # flask = Flask(__name__)
     # flask.run()
 
 
-    save_config_data()
+
