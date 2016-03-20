@@ -1,4 +1,5 @@
 ve/
+__pycache__/
 .idea/.name
 .idea/encodings.xml
 .idea/modules.xml
