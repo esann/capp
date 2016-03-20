@@ -12,6 +12,13 @@
 
 from common import UserError
 
+ID = "id"
+LINKS = "links"
+DATA = "data"
+
+DATATYPE_NAME = "name"
+DATATYPE_OWNER_LINK = "owner_link"
+
 def create_empty_object(uid):
     # the_object = {"id": uid, "links": [{"abs": "def"}], "data": {"datatype": "text", "content": "hello"}}
     # the_object = {"id": uid, "links": [], "data": {"datatype": "text", "content": "hello"}}
@@ -21,23 +28,32 @@ def create_empty_object(uid):
 
 def add_link(object, link_id, object_id):
     if not ({link_id, object_id} in object["links"]):
-        object["links"].append({link_id: object_id})
+        object["links"].append([link_id, object_id])
     return
 
 
 def remove_link(object, link_id, object_id):
-    object["links"].remove({link_id: object_id})
+    object["links"].remove([link_id, object_id])
     return
 
 
 def link_exists(object, link_id, object_id) -> bool:
     try:
-        return {link_id: object_id} in object["links"]
+        return [link_id, object_id] in object["links"]
+    except:
+        return False
+
+def links_exists(object, links) -> bool:
+    try:
+        for l in links:
+            if not link_exists(object, l[0], l[1]):
+                return False;
+        return True
     except:
         return False
 
 
-def set_data(object, datatype, content):
+def set_data(object, datatype, content = None):
     object["data"] = {"data_type": datatype, "content": content}
     return
 
@@ -65,12 +81,12 @@ def test_the_object_module():
     add_link(obj, "abc", "def")
 
     try:
-        if ({"abc": "def"} in obj["links"]):
+        if (["abc", "def"] in obj["links"]):
             pass
     except:
         raise ValueError("TEST: Link not added with add_link")
 
-    if ({"abc": "defg"} in obj["links"]):
+    if (["abc", "defg"] in obj["links"]):
         raise ValueError("TEST: add_link adds unknown link")
 
     # TEST: link_exists
@@ -79,6 +95,15 @@ def test_the_object_module():
 
     if link_exists(obj, "abc", "defg"):
         raise ValueError("TEST: link_exists fail (link not exists)")
+
+    add_link(obj, "def", "ghi");
+    add_link(obj, "jkl", "mno");
+
+    if links_exists(obj, [["jkl", "mnop"]]):
+        raise UserError("TEST: links_exists fail (link not exists)")
+
+    if not links_exists(obj, [["jkl", "mno"], ["abc", "def"]]):
+        raise UserError("TEST: links_exists fail (link exists)")
 
     # TEST: remove_link
 
