@@ -19,11 +19,28 @@ DATA = "data"
 DATATYPE_NAME = "name"
 DATATYPE_OWNER_LINK = "owner_link"
 
-def create_empty_object(uid):
+def create_empty_object_force(uid):
+    the_object = {"id": uid, "links": [], "data": {}}
+    return the_object
+
+
+def create_empty_object(uid, config, owner_id = None):
     # the_object = {"id": uid, "links": [{"abs": "def"}], "data": {"datatype": "text", "content": "hello"}}
     # the_object = {"id": uid, "links": [], "data": {"datatype": "text", "content": "hello"}}
     the_object = {"id": uid, "links": [], "data": {}}
+    if owner_id == None:
+        setOwner(config, the_object, config["root_object_id"])
+    else:
+        setOwner(config, the_object, owner_id)
     return the_object
+
+
+def setOwner(config, object, owner_id):
+    for l in object[LINKS][:]:
+        if l[0] == config["owner_link_id"]:
+            object[LINKS].remove(l)
+
+    add_link(object, config["owner_link_id"], owner_id)
 
 
 def add_link(object, link_id, object_id):
@@ -43,8 +60,14 @@ def link_exists(object, link_id, object_id) -> bool:
     except:
         return False
 
+
 def links_exists(object, links) -> bool:
     try:
+        if links == []:
+            if object[LINKS] == links:
+                return True
+            else:
+                return False
         for l in links:
             if not link_exists(object, l[0], l[1]):
                 return False;
@@ -58,7 +81,7 @@ def set_data(object, datatype, content = None):
     return
 
 
-def test_the_object_module():
+def test_the_object_module(config):
     # test create_empty_object
 
     try:
@@ -67,12 +90,13 @@ def test_the_object_module():
     except TypeError as e:
         pass
 
-    obj = create_empty_object("abc")
+    obj = create_empty_object("abc", config, None)
     if not (obj["id"] == "abc"):
         raise ValueError("TEST: Key not equals with create_empty_object argument")
 
-    if not (obj["links"] == []):
-        raise ValueError("TEST: Links not empty for create_empty_object result")
+    #ссылки не пустые, т.к. объект ссылается на root_object
+    if (obj["links"] == []):
+        raise ValueError("TEST: Links empty for create_empty_object result")
 
     if not (obj["data"] == {}):
         raise ValueError("TEST: Data not empty for create_empty_object result")
